@@ -8,12 +8,9 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const storeId = searchParams.get("storeId");
-
   if (!storeId) return apiError("storeId is required");
 
-  const store = await prisma.store.findFirst({
-    where: { id: storeId, accountId: account.id },
-  });
+  const store = await prisma.store.findFirst({ where: { id: storeId, accountId: account.id } });
   if (!store) return apiError("Store not found", 404);
 
   const products = await prisma.product.findMany({
@@ -30,35 +27,31 @@ export async function POST(req: NextRequest) {
   if (!account) return apiError("Unauthorized", 401);
 
   const body = await req.json();
-  const { storeId, name, description, imageUrl, variants } = body ?? {};
+  const { storeId, name, description, images, variants } = body ?? {};
 
   if (!storeId || !name) return apiError("storeId and name are required");
 
-  const store = await prisma.store.findFirst({
-    where: { id: storeId, accountId: account.id },
-  });
+  const store = await prisma.store.findFirst({ where: { id: storeId, accountId: account.id } });
   if (!store) return apiError("Store not found", 404);
+
+  const imgList: string[] = Array.isArray(images) ? images.filter(Boolean) : [];
 
   const product = await prisma.product.create({
     data: {
       storeId,
       name,
       description: description ?? null,
-      imageUrl: imageUrl ?? null,
+      imageUrl: imgList[0] ?? null,
+      images: imgList,
       variants: variants?.length
         ? {
             create: variants.map((v: {
-              name: string;
-              sku?: string;
-              price: number;
-              currency?: string;
-              recurring?: boolean;
-              interval?: string;
-              trialDays?: number;
+              name: string; sku?: string; price: number; currency?: string;
+              recurring?: boolean; interval?: string; trialDays?: number;
             }) => ({
               name: v.name,
               sku: v.sku ?? null,
-              price: v.price,
+              price: Math.round(v.price),
               currency: v.currency ?? store.baseCurrency,
               recurring: v.recurring ?? false,
               interval: v.interval ?? null,
