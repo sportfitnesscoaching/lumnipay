@@ -54,15 +54,31 @@ model ApiKey {
 
 // ─── STORES & CATALOG ───────────────────────────────────────────────────────
 
+enum StorePlatform {
+  CUSTOM
+  WOOCOMMERCE
+  SHOPIFY
+  PRESTASHOP
+  MAGENTO
+}
+
 model Store {
-  id              String   @id @default(cuid())
+  id              String        @id @default(cuid())
   name            String
-  baseCurrency    String   @default("USD")
-  displayCurrency String   @default("USD")
-  domain          String?
+  slug            String?       @unique
+  description     String?
+  platform        StorePlatform @default(CUSTOM)
+  platformUrl     String?
+  platformKey     String?
+  platformSecret  String?
+  baseCurrency    String        @default("USD")
+  displayCurrency String        @default("USD")
+  primaryColor    String        @default("#6366f1")
   logoUrl         String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  coverImageUrl   String?
+  domain          String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   accountId String
   account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
@@ -74,6 +90,7 @@ model Store {
   payments         Payment[]
   customers        Customer[]
   subscriptions    Subscription[]
+  customDomains    CustomDomain[]
 }
 
 model Product {
@@ -81,6 +98,7 @@ model Product {
   name        String
   description String?
   imageUrl    String?
+  images      String[] @default([])
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -564,6 +582,9 @@ model CustomDomain {
 
   accountId String
   account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  storeId String?
+  store   Store?  @relation(fields: [storeId], references: [id])
 }
 
 model BlockRule {
