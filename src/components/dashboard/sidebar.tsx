@@ -15,6 +15,7 @@ import {
   Webhook,
   Key,
   FlaskConical,
+  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -43,31 +44,41 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-60 min-h-screen bg-gray-900 text-white flex flex-col">
-      <div className="px-6 py-5 border-b border-gray-700">
-        <span className="text-xl font-bold text-indigo-400">LumniPay</span>
+    <aside className="w-64 min-h-screen bg-gray-950 text-white flex flex-col border-r border-white/5">
+      <div className="px-5 py-5 border-b border-white/5">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+            <Zap className="w-4 h-4 text-white fill-white" />
+          </div>
+          <span className="text-lg font-bold tracking-tight text-white">LumniPay</span>
+        </div>
       </div>
+
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {nav.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className={cn(
-              "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
-              pathname === href
-                ? "bg-indigo-600 text-white"
-                : "text-gray-400 hover:bg-gray-800 hover:text-white"
-            )}
-          >
-            <Icon className="w-4 h-4 shrink-0" />
-            {label}
-          </Link>
-        ))}
+        {nav.map(({ href, label, icon: Icon }) => {
+          const active = pathname === href;
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150",
+                active
+                  ? "bg-indigo-600 text-white shadow-sm shadow-indigo-500/20"
+                  : "text-gray-400 hover:bg-white/5 hover:text-gray-100"
+              )}
+            >
+              <Icon className={cn("w-4 h-4 shrink-0", active ? "text-white" : "text-gray-500")} />
+              {label}
+            </Link>
+          );
+        })}
       </nav>
-      <div className="px-3 py-4 border-t border-gray-700">
+
+      <div className="px-3 py-4 border-t border-white/5">
         <button
           onClick={logout}
-          className="flex items-center gap-3 px-3 py-2 w-full rounded-md text-sm text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
+          className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm font-medium text-gray-500 hover:bg-white/5 hover:text-gray-200 transition-all duration-150"
         >
           <LogOut className="w-4 h-4" />
           Déconnexion
