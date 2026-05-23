@@ -1,0 +1,595 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── ACCOUNTS & AUTH ────────────────────────────────────────────────────────
+
+model Account {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  plan      Plan     @default(FREE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  apiKeys       ApiKey[]
+  stores        Store[]
+  processors    Processor[]
+  paymentFlows  PaymentFlow[]
+  webhooks      Webhook[]
+  customDomains CustomDomain[]
+  blockRules    BlockRule[]
+  events        Event[]
+}
+
+enum Plan {
+  FREE
+  STARTER
+  PRO
+  ENTERPRISE
+}
+
+model ApiKey {
+  id        String    @id @default(cuid())
+  key       String    @unique
+  name      String
+  lastUsed  DateTime?
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+
+// ─── STORES & CATALOG ───────────────────────────────────────────────────────
+
+model Store {
+  id              String   @id @default(cuid())
+  name            String
+  baseCurrency    String   @default("USD")
+  displayCurrency String   @default("USD")
+  domain          String?
+  logoUrl         String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  products         Product[]
+  funnels          Funnel[]
+  checkoutSessions CheckoutSession[]
+  orders           Order[]
+  payments         Payment[]
+  customers        Customer[]
+  subscriptions    Subscription[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  imageUrl    String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  storeId String
+  store   Store  @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  variants   ProductVariant[]
+  orderItems OrderItem[]
+  promotions PromotionProduct[]
+}
+
+model ProductVariant {
+  id        String   @id @default(cuid())
+  sku       String?
+  name      String
+  price     Int
+  currency  String   @default("USD")
+  recurring Boolean  @default(false)
+  interval  String?
+  trialDays Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  orderItems    OrderItem[]
+  subscriptions Subscription[]
+}
+
+// ─── PROCESSORS & PAYMENT FLOWS ─────────────────────────────────────────────
+
+model Processor {
+  id        String        @id @default(cuid())
+  name      String
+  type      ProcessorType
+  options   Json
+  active    Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  paymentFlowProcessors PaymentFlowProcessor[]
+  payments              Payment[]
+  subscriptions         Subscription[]
+}
+
+enum ProcessorType {
+  STRIPE
+  NMI
+  ADYEN
+  BRAINTREE
+  SANDBOX
+}
+
+model PaymentFlow {
+  id        String       @id @default(cuid())
+  name      String
+  strategy  FlowStrategy @default(SIMPLE)
+  active    Boolean      @default(true)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  processors       PaymentFlowProcessor[]
+  funnels          Funnel[]
+  checkoutSessions CheckoutSession[]
+}
+
+enum FlowStrategy {
+  SIMPLE
+  CASCADE
+  ROUND_ROBIN
+  PERCENTAGE
+}
+
+model PaymentFlowProcessor {
+  id         String @id @default(cuid())
+  priority   Int    @default(0)
+  percentage Int?
+
+  paymentFlowId String
+  paymentFlow   PaymentFlow @relation(fields: [paymentFlowId], references: [id], onDelete: Cascade)
+
+  processorId String
+  processor   Processor @relation(fields: [processorId], references: [id], onDelete: Cascade)
+}
+
+// ─── FUNNELS & CHECKOUT ─────────────────────────────────────────────────────
+
+model Funnel {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String
+  active    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  storeId String
+  store   Store  @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  paymentFlowId String?
+  paymentFlow   PaymentFlow? @relation(fields: [paymentFlowId], references: [id])
+
+  steps            FunnelStep[]
+  checkoutSessions CheckoutSession[]
+
+  @@unique([storeId, slug])
+}
+
+model FunnelStep {
+  id        String   @id @default(cuid())
+  order     Int
+  type      StepType
+  config    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  funnelId String
+  funnel   Funnel @relation(fields: [funnelId], references: [id], onDelete: Cascade)
+}
+
+enum StepType {
+  CHECKOUT
+  UPSELL
+  DOWNSELL
+  THANK_YOU
+  CUSTOM
+}
+
+model CheckoutSession {
+  id        String        @id @default(cuid())
+  token     String        @unique @default(cuid())
+  status    SessionStatus @default(PENDING)
+  currency  String        @default("USD")
+  items     Json
+  metadata  Json?
+  expiresAt DateTime
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  storeId String
+  store   Store  @relation(fields: [storeId], references: [id])
+
+  funnelId String?
+  funnel   Funnel? @relation(fields: [funnelId], references: [id])
+
+  paymentFlowId String?
+  paymentFlow   PaymentFlow? @relation(fields: [paymentFlowId], references: [id])
+
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+
+  orderId String?
+  order   Order?  @relation(fields: [orderId], references: [id])
+}
+
+enum SessionStatus {
+  PENDING
+  COMPLETED
+  EXPIRED
+  ABANDONED
+}
+
+// ─── CUSTOMERS ───────────────────────────────────────────────────────────────
+
+model Customer {
+  id        String   @id @default(cuid())
+  email     String
+  firstName String?
+  lastName  String?
+  phone     String?
+  tags      String[]
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  storeId String
+  store   Store  @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  paymentInstruments PaymentInstrument[]
+  orders             Order[]
+  payments           Payment[]
+  subscriptions      Subscription[]
+  checkoutSessions   CheckoutSession[]
+
+  @@unique([storeId, email])
+}
+
+model PaymentInstrument {
+  id          String         @id @default(cuid())
+  type        InstrumentType @default(CARD)
+  brand       String?
+  last4       String?
+  expMonth    Int?
+  expYear     Int?
+  token       String
+  processorId String?
+  isDefault   Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  payments      Payment[]
+  subscriptions Subscription[]
+}
+
+enum InstrumentType {
+  CARD
+  BANK_ACCOUNT
+  PAYPAL
+}
+
+// ─── ORDERS & PAYMENTS ───────────────────────────────────────────────────────
+
+model Order {
+  id        String      @id @default(cuid())
+  number    String      @unique
+  status    OrderStatus @default(PENDING)
+  currency  String
+  subtotal  Int
+  discount  Int         @default(0)
+  total     Int
+  metadata  Json?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  storeId String
+  store   Store  @relation(fields: [storeId], references: [id])
+
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+
+  items            OrderItem[]
+  payments         Payment[]
+  checkoutSessions CheckoutSession[]
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PARTIALLY_REFUNDED
+  REFUNDED
+  CANCELLED
+  FAILED
+}
+
+model OrderItem {
+  id       String @id @default(cuid())
+  quantity Int
+  price    Int
+  currency String
+
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  variantId String
+  variant   ProductVariant @relation(fields: [variantId], references: [id])
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  amount        Int
+  currency      String
+  status        PaymentStatus @default(PENDING)
+  initiatedBy   InitiatedBy   @default(CUSTOMER)
+  processorRef  String?
+  errorCode     String?
+  errorMessage  String?
+  disputeStatus DisputeStatus?
+  metadata      Json?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  storeId String
+  store   Store  @relation(fields: [storeId], references: [id])
+
+  orderId String?
+  order   Order?  @relation(fields: [orderId], references: [id])
+
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+
+  processorId String?
+  processor   Processor? @relation(fields: [processorId], references: [id])
+
+  paymentInstrumentId String?
+  paymentInstrument   PaymentInstrument? @relation(fields: [paymentInstrumentId], references: [id])
+
+  transactions Transaction[]
+  refunds      Refund[]
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  CAPTURED
+  FAILED
+  VOIDED
+  REFUNDED
+  PARTIALLY_REFUNDED
+  DISPUTED
+}
+
+enum InitiatedBy {
+  CUSTOMER
+  MERCHANT
+}
+
+enum DisputeStatus {
+  RESPONSE_NEEDED
+  UNDER_REVIEW
+  FORFEITED
+  WON
+  LOST
+  RDR
+  ALERT
+}
+
+model Transaction {
+  id           String          @id @default(cuid())
+  type         TransactionType
+  amount       Int
+  currency     String
+  status       String
+  processorRef String?
+  raw          Json?
+  createdAt    DateTime        @default(now())
+
+  paymentId String
+  payment   Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+}
+
+enum TransactionType {
+  AUTHORIZE
+  CAPTURE
+  SALE
+  VOID
+  REFUND
+}
+
+model Refund {
+  id           String   @id @default(cuid())
+  amount       Int
+  reason       String?
+  processorRef String?
+  createdAt    DateTime @default(now())
+
+  paymentId String
+  payment   Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+}
+
+// ─── SUBSCRIPTIONS ───────────────────────────────────────────────────────────
+
+model Subscription {
+  id                 String             @id @default(cuid())
+  status             SubscriptionStatus @default(ACTIVE)
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd  Boolean            @default(false)
+  processorRef       String?
+  metadata           Json?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  storeId String
+  store   Store  @relation(fields: [storeId], references: [id])
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  variantId String
+  variant   ProductVariant @relation(fields: [variantId], references: [id])
+
+  processorId String?
+  processor   Processor? @relation(fields: [processorId], references: [id])
+
+  paymentInstrumentId String?
+  paymentInstrument   PaymentInstrument? @relation(fields: [paymentInstrumentId], references: [id])
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  PAUSED
+  UNPAID
+}
+
+// ─── PROMOTIONS ──────────────────────────────────────────────────────────────
+
+model Promotion {
+  id        String        @id @default(cuid())
+  name      String
+  type      PromotionType
+  value     Int
+  currency  String?
+  maxUses   Int?
+  usedCount Int           @default(0)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  active    Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  codes    PromotionCode[]
+  products PromotionProduct[]
+}
+
+enum PromotionType {
+  PERCENTAGE
+  FIXED
+  FREE_SHIPPING
+}
+
+model PromotionCode {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  maxUses   Int?
+  usedCount Int      @default(0)
+  createdAt DateTime @default(now())
+
+  promotionId String
+  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+}
+
+model PromotionProduct {
+  promotionId String
+  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([promotionId, productId])
+}
+
+// ─── WEBHOOKS & EVENTS ───────────────────────────────────────────────────────
+
+model Webhook {
+  id        String   @id @default(cuid())
+  url       String
+  secret    String
+  events    String[]
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+
+model Event {
+  id        String   @id @default(cuid())
+  type      String
+  payload   Json
+  createdAt DateTime @default(now())
+
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+
+// ─── CUSTOM DOMAINS & BLOCK RULES ────────────────────────────────────────────
+
+model CustomDomain {
+  id                String   @id @default(cuid())
+  domain            String   @unique
+  isVerified        Boolean  @default(false)
+  enabled           Boolean  @default(false)
+  verificationToken String   @unique @default(cuid())
+  createdAt         DateTime @default(now())
+
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+
+model BlockRule {
+  id        String        @id @default(cuid())
+  name      String
+  type      BlockRuleType
+  value     String
+  action    BlockAction   @default(BLOCK)
+  active    Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+
+enum BlockRuleType {
+  EMAIL
+  IP
+  CARD_BIN
+  COUNTRY
+  DOMAIN
+}
+
+enum BlockAction {
+  BLOCK
+  FLAG
+  CHALLENGE
+}
