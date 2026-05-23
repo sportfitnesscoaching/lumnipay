@@ -9,7 +9,7 @@ import {
 import {
   t, langs,
   type Lang, type NavTx, type HeroTx, type FeaturesTx,
-  type HowTx, type CtaTx, type FooterTx, type Translations,
+  type HowTx, type PricingTx, type CtaTx, type FooterTx, type Translations,
 } from "@/lib/homepage-i18n";
 
 const featureIcons = [Cpu, GitBranch, Store, CreditCard, Webhook, Shield];
@@ -26,6 +26,7 @@ export default function HomePage() {
       <Features tx={tx.features} />
       <HowItWorks tx={tx.how} />
       <Stats stats={tx.stats} />
+      <Pricing tx={tx.pricing} />
       <CtaSection tx={tx.cta} />
       <Footer tx={tx.footer} />
     </div>
@@ -318,6 +319,120 @@ function Stats({ stats }: { stats: Translations["stats"] }) {
             <div key={label}>
               <div className="text-3xl md:text-4xl font-extrabold text-white mb-1">{value}</div>
               <div className="text-sm text-gray-500">{label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── Pricing ────────────────────────────────────────────────────────── */
+
+function Pricing({ tx }: { tx: PricingTx }) {
+  const [annual, setAnnual] = useState(false);
+
+  return (
+    <section id="pricing" className="py-24 px-6 border-t border-white/5">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 text-sm text-gray-400 mb-5">
+            <CreditCard className="w-3.5 h-3.5" />
+            {tx.badge}
+          </div>
+          <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
+            {tx.h2a} <span className="text-gray-500">{tx.h2b}</span>
+          </h2>
+          <p className="text-gray-400 text-lg max-w-xl mx-auto mb-8">{tx.sub}</p>
+
+          {/* Toggle */}
+          <div className="inline-flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl p-1">
+            <button
+              onClick={() => setAnnual(false)}
+              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
+                !annual ? "bg-indigo-600 text-white shadow-sm" : "text-gray-400 hover:text-white"
+              }`}
+            >
+              {tx.toggleMonthly}
+            </button>
+            <button
+              onClick={() => setAnnual(true)}
+              className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
+                annual ? "bg-indigo-600 text-white shadow-sm" : "text-gray-400 hover:text-white"
+              }`}
+            >
+              {tx.toggleAnnual}
+              <span className="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2 py-0.5 rounded-full">
+                {tx.saveLabel}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+          {tx.plans.map((plan) => (
+            <div
+              key={plan.name}
+              className={`relative flex flex-col rounded-2xl p-8 transition-all ${
+                plan.popular
+                  ? "bg-gradient-to-b from-indigo-600 to-indigo-700 border border-indigo-500 shadow-2xl shadow-indigo-500/20 scale-[1.03]"
+                  : "bg-white/4 border border-white/10 hover:border-white/20"
+              }`}
+            >
+              {plan.badge && (
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+                  <span className="bg-white text-indigo-700 text-xs font-bold px-4 py-1 rounded-full shadow-lg">
+                    {plan.badge}
+                  </span>
+                </div>
+              )}
+
+              <div className="mb-6">
+                <h3 className={`text-lg font-bold mb-1 ${plan.popular ? "text-white" : "text-white"}`}>
+                  {plan.name}
+                </h3>
+                <p className={`text-sm ${plan.popular ? "text-indigo-200" : "text-gray-500"}`}>
+                  {plan.desc}
+                </p>
+              </div>
+
+              <div className="mb-8">
+                <div className="flex items-end gap-1">
+                  <span className={`text-5xl font-extrabold tracking-tight ${plan.popular ? "text-white" : "text-white"}`}>
+                    {annual ? plan.annualPrice : plan.monthlyPrice}
+                  </span>
+                  {plan.name !== "Starter" && (
+                    <span className={`text-sm mb-2 ${plan.popular ? "text-indigo-200" : "text-gray-500"}`}>
+                      /mo
+                    </span>
+                  )}
+                </div>
+                <p className={`text-xs mt-1 ${plan.popular ? "text-indigo-300" : "text-gray-600"}`}>
+                  {annual ? plan.annualNote : (plan.name === "Starter" ? plan.annualNote : "")}
+                </p>
+              </div>
+
+              <ul className="space-y-3 mb-8 flex-1">
+                {plan.features.map((feature) => (
+                  <li key={feature} className="flex items-center gap-3 text-sm">
+                    <CheckCircle2
+                      className={`w-4 h-4 shrink-0 ${plan.popular ? "text-indigo-200" : "text-indigo-400"}`}
+                    />
+                    <span className={plan.popular ? "text-indigo-100" : "text-gray-400"}>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Link
+                href="/register"
+                className={`w-full text-center py-3 rounded-xl font-semibold text-sm transition-all ${
+                  plan.popular
+                    ? "bg-white text-indigo-700 hover:bg-indigo-50 shadow-lg"
+                    : "bg-white/10 text-white hover:bg-white/15 border border-white/10"
+                }`}
+              >
+                {plan.cta}
+              </Link>
             </div>
           ))}
         </div>
