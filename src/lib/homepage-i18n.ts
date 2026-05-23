@@ -14,6 +14,29 @@ export interface HowTx { h2a: string; h2b: string; sub: string; steps: { n: stri
 export type StatsTx = { value: string; label: string }[]
 export interface CtaTx { h2: string; sub: string; primary: string; secondary: string; perks: string[] }
 export interface FooterTx { copy: string; privacy: string; terms: string; contact: string }
+
+export interface PricingPlan {
+  name: string;
+  badge?: string;
+  monthlyPrice: string;
+  annualPrice: string;
+  annualNote: string;
+  desc: string;
+  cta: string;
+  popular: boolean;
+  features: string[];
+}
+export interface PricingTx {
+  badge: string;
+  h2a: string;
+  h2b: string;
+  sub: string;
+  toggleMonthly: string;
+  toggleAnnual: string;
+  saveLabel: string;
+  plans: [PricingPlan, PricingPlan, PricingPlan];
+}
+
 export interface Translations {
   nav: NavTx;
   hero: HeroTx;
@@ -21,6 +44,7 @@ export interface Translations {
   features: FeaturesTx;
   how: HowTx;
   stats: { value: string; label: string }[];
+  pricing: PricingTx;
   cta: CtaTx;
   footer: FooterTx;
 }
@@ -94,6 +118,70 @@ export const t: Record<Lang, Translations> = {
       { value: "150+", label: "Devises supportées" },
       { value: "0€", label: "Pour démarrer" },
     ],
+    pricing: {
+      badge: "Tarifs simples et transparents",
+      h2a: "Le bon plan",
+      h2b: "pour votre activité.",
+      sub: "Commencez gratuitement, évoluez à votre rythme. Aucune surprise, aucun engagement.",
+      toggleMonthly: "Mensuel",
+      toggleAnnual: "Annuel",
+      saveLabel: "Économisez 20%",
+      plans: [
+        {
+          name: "Starter",
+          monthlyPrice: "0€",
+          annualPrice: "0€",
+          annualNote: "Gratuit pour toujours",
+          desc: "Idéal pour tester et lancer votre premier store.",
+          cta: "Commencer gratuitement",
+          popular: false,
+          features: [
+            "1 store",
+            "5 produits",
+            "1 processeur de paiement",
+            "Checkout standard",
+            "Support par email",
+          ],
+        },
+        {
+          name: "Pro",
+          badge: "Populaire",
+          monthlyPrice: "49€",
+          annualPrice: "39€",
+          annualNote: "/mois, facturé annuellement",
+          desc: "Pour les marchands en croissance qui veulent plus.",
+          cta: "Démarrer en Pro",
+          popular: true,
+          features: [
+            "5 stores",
+            "Produits illimités",
+            "Routage multi-processeurs",
+            "Checkout personnalisé",
+            "Funnels & upsells",
+            "Webhooks & API",
+            "Support prioritaire",
+          ],
+        },
+        {
+          name: "Scale",
+          monthlyPrice: "149€",
+          annualPrice: "119€",
+          annualNote: "/mois, facturé annuellement",
+          desc: "Pour les équipes et volumes importants.",
+          cta: "Contacter l'équipe",
+          popular: false,
+          features: [
+            "Stores illimités",
+            "Produits illimités",
+            "Règles de routage avancées",
+            "Checkout white-label",
+            "Analytics avancés",
+            "Intégrations personnalisées",
+            "Account manager dédié",
+          ],
+        },
+      ],
+    },
     cta: {
       h2: "Prêt à encaisser vos premiers paiements ?",
       sub: "Rejoignez des centaines de marchands qui font confiance à LumniPay.",
@@ -177,6 +265,70 @@ export const t: Record<Lang, Translations> = {
       { value: "150+", label: "Supported currencies" },
       { value: "€0", label: "To get started" },
     ],
+    pricing: {
+      badge: "Simple, transparent pricing",
+      h2a: "The right plan",
+      h2b: "for your business.",
+      sub: "Start for free, scale at your own pace. No surprises, no commitment.",
+      toggleMonthly: "Monthly",
+      toggleAnnual: "Annual",
+      saveLabel: "Save 20%",
+      plans: [
+        {
+          name: "Starter",
+          monthlyPrice: "€0",
+          annualPrice: "€0",
+          annualNote: "Free forever",
+          desc: "Perfect for testing and launching your first store.",
+          cta: "Get started free",
+          popular: false,
+          features: [
+            "1 store",
+            "5 products",
+            "1 payment processor",
+            "Standard checkout",
+            "Email support",
+          ],
+        },
+        {
+          name: "Pro",
+          badge: "Popular",
+          monthlyPrice: "€49",
+          annualPrice: "€39",
+          annualNote: "/mo, billed annually",
+          desc: "For growing merchants who need more power.",
+          cta: "Start with Pro",
+          popular: true,
+          features: [
+            "5 stores",
+            "Unlimited products",
+            "Multi-processor routing",
+            "Custom checkout branding",
+            "Funnels & upsells",
+            "Webhooks & API",
+            "Priority support",
+          ],
+        },
+        {
+          name: "Scale",
+          monthlyPrice: "€149",
+          annualPrice: "€119",
+          annualNote: "/mo, billed annually",
+          desc: "For teams and high-volume merchants.",
+          cta: "Contact sales",
+          popular: false,
+          features: [
+            "Unlimited stores",
+            "Unlimited products",
+            "Advanced routing rules",
+            "White-label checkout",
+            "Advanced analytics",
+            "Custom integrations",
+            "Dedicated account manager",
+          ],
+        },
+      ],
+    },
     cta: {
       h2: "Ready to collect your first payments?",
       sub: "Join hundreds of merchants who trust LumniPay.",
@@ -260,6 +412,70 @@ export const t: Record<Lang, Translations> = {
       { value: "150+", label: "Unterstützte Währungen" },
       { value: "0€", label: "Zum Starten" },
     ],
+    pricing: {
+      badge: "Einfache, transparente Preise",
+      h2a: "Der richtige Plan",
+      h2b: "für Ihr Business.",
+      sub: "Kostenlos starten, in Ihrem Tempo wachsen. Keine Überraschungen, keine Bindung.",
+      toggleMonthly: "Monatlich",
+      toggleAnnual: "Jährlich",
+      saveLabel: "20% sparen",
+      plans: [
+        {
+          name: "Starter",
+          monthlyPrice: "0€",
+          annualPrice: "0€",
+          annualNote: "Für immer kostenlos",
+          desc: "Ideal zum Testen und für Ihren ersten Store.",
+          cta: "Kostenlos starten",
+          popular: false,
+          features: [
+            "1 Store",
+            "5 Produkte",
+            "1 Zahlungsanbieter",
+            "Standard-Checkout",
+            "E-Mail-Support",
+          ],
+        },
+        {
+          name: "Pro",
+          badge: "Beliebt",
+          monthlyPrice: "49€",
+          annualPrice: "39€",
+          annualNote: "/Monat, jährlich abgerechnet",
+          desc: "Für wachsende Händler mit höheren Ansprüchen.",
+          cta: "Mit Pro starten",
+          popular: true,
+          features: [
+            "5 Stores",
+            "Unbegrenzte Produkte",
+            "Multi-Prozessor-Routing",
+            "Individuelles Checkout-Design",
+            "Funnels & Upsells",
+            "Webhooks & API",
+            "Prioritäts-Support",
+          ],
+        },
+        {
+          name: "Scale",
+          monthlyPrice: "149€",
+          annualPrice: "119€",
+          annualNote: "/Monat, jährlich abgerechnet",
+          desc: "Für Teams und hohe Transaktionsvolumen.",
+          cta: "Vertrieb kontaktieren",
+          popular: false,
+          features: [
+            "Unbegrenzte Stores",
+            "Unbegrenzte Produkte",
+            "Erweiterte Routing-Regeln",
+            "White-Label-Checkout",
+            "Erweiterte Analysen",
+            "Individuelle Integrationen",
+            "Dedizierter Account-Manager",
+          ],
+        },
+      ],
+    },
     cta: {
       h2: "Bereit, Ihre ersten Zahlungen zu empfangen?",
       sub: "Schließen Sie sich hunderten von Händlern an, die LumniPay vertrauen.",
@@ -343,6 +559,70 @@ export const t: Record<Lang, Translations> = {
       { value: "150+", label: "Valute supportate" },
       { value: "€0", label: "Per iniziare" },
     ],
+    pricing: {
+      badge: "Prezzi semplici e trasparenti",
+      h2a: "Il piano giusto",
+      h2b: "per la tua attività.",
+      sub: "Inizia gratuitamente, cresci al tuo ritmo. Nessuna sorpresa, nessun vincolo.",
+      toggleMonthly: "Mensile",
+      toggleAnnual: "Annuale",
+      saveLabel: "Risparmia il 20%",
+      plans: [
+        {
+          name: "Starter",
+          monthlyPrice: "€0",
+          annualPrice: "€0",
+          annualNote: "Gratis per sempre",
+          desc: "Ideale per testare e lanciare il tuo primo store.",
+          cta: "Inizia gratuitamente",
+          popular: false,
+          features: [
+            "1 store",
+            "5 prodotti",
+            "1 processore di pagamento",
+            "Checkout standard",
+            "Supporto via email",
+          ],
+        },
+        {
+          name: "Pro",
+          badge: "Popolare",
+          monthlyPrice: "€49",
+          annualPrice: "€39",
+          annualNote: "/mese, fatturato annualmente",
+          desc: "Per i commercianti in crescita che vogliono di più.",
+          cta: "Inizia con Pro",
+          popular: true,
+          features: [
+            "5 store",
+            "Prodotti illimitati",
+            "Routing multi-processore",
+            "Checkout personalizzato",
+            "Funnel & upsell",
+            "Webhook & API",
+            "Supporto prioritario",
+          ],
+        },
+        {
+          name: "Scale",
+          monthlyPrice: "€149",
+          annualPrice: "€119",
+          annualNote: "/mese, fatturato annualmente",
+          desc: "Per team e volumi elevati.",
+          cta: "Contatta il team",
+          popular: false,
+          features: [
+            "Store illimitati",
+            "Prodotti illimitati",
+            "Regole di routing avanzate",
+            "Checkout white-label",
+            "Analytics avanzati",
+            "Integrazioni personalizzate",
+            "Account manager dedicato",
+          ],
+        },
+      ],
+    },
     cta: {
       h2: "Pronto a ricevere i tuoi primi pagamenti?",
       sub: "Unisciti a centinaia di commercianti che si fidano di LumniPay.",
